@@ -1,0 +1,28 @@
+---
+#this playbook will run on the hosts under the target group in inventory file
+- hosts: target
+  become: yes # to give root privilages for the target instances 
+	
+  tasks: # task that should be run on target instances 
+    - name: Update apt cache # Description about the task 
+      apt:	
+        update_cache: yes
+
+    - name: Install Apache, MySQL, and PHP
+      apt:
+        name: "{{ item }}" #item variable is used in conjunction with the with_items loop to iterate over a list of package names 
+        state: present # package should be present or installed on the target hosts
+      with_items:	#loop construct iterates over a list of items
+        - apache2
+        - mysql-server
+        - php
+        - libapache2-mod-php
+      notify:	#when this task completes, it should trigger a handler named "Restart Apache."
+        - Restart Apache
+
+  handlers:	# defines handlers, which are triggered by notifications from tasks
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
+
